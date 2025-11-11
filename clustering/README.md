@@ -162,6 +162,3 @@ Zabbix HA cluster status:
 - [Zabbix Blog: Zabbix 6.0 HA overview](https://blog.zabbix.com/zabbix-6-0-high-availability/17289/)
 
 ---
-
-## 🪪 License
-MIT License — see [LICENSE](LICENSE)
