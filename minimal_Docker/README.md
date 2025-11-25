@@ -186,39 +186,6 @@ docker compose down -v
 
 ------------------------------------------------------------------------
 
-## ❓ Need Help?
-
-This deployment is designed for:
-
--   Home labs\
--   Monitoring Docker hosts\
--   Monitoring SNMP switches/routers\
--   VPS with low RAM (1--2 GB)\
--   Zabbix training environments\
--   Small business production use
-
-If you need: - Grafana integration\
-- Prometheus integration\
-- HA Zabbix setup\
-- Auto backup scripts\
-- Docker monitoring template
-
-Just ask --- happy to help.
-
-------------------------------------------------------------------------
-
-## 🔚 Summary
-
-This repository gives you a clean, safe, and modern Zabbix 7 deployment
-with:
-
--   PostgreSQL 16\
--   Persistent data\
--   Low-memory tuning\
--   No hardcoded secrets\
--   Easy upgrades\
--   GitHub-safe structure
-
 Deploy it anywhere in seconds using Docker Compose.
 
     docker compose up -d
