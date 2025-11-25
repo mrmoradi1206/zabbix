@@ -1,0 +1,93 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: zabbix-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbix
+      POSTGRES_DB: zabbix
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    command: >
+      postgres
+        -c shared_buffers=128MB
+        -c max_connections=40
+        -c work_mem=4MB
+        -c maintenance_work_mem=64MB
+        -c effective_cache_size=256MB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zabbix -d zabbix"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:alpine-7.0-latest
+    container_name: zabbix-server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_SERVER_HOST: db
+      DB_SERVER_PORT: 5432
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbix
+      POSTGRES_DB: zabbix
+
+      # --- low-memory tuning ---
+      ZBX_DEBUGLEVEL: "3"
+      ZBX_CACHE_SIZE: "64M"
+      ZBX_HISTORY_CACHE_SIZE: "32M"
+      ZBX_HISTORY_INDEX_CACHE_SIZE: "16M"
+      ZBX_TRENDS_CACHE_SIZE: "16M"
+      ZBX_VALUE_CACHE_SIZE: "32M"
+
+      ZBX_STARTPOLLERS: "5"
+      ZBX_STARTPOLLERSUNREACHABLE: "1"
+      ZBX_STARTPINGERS: "1"
+      ZBX_STARTDISCOVERERS: "1"
+      ZBX_STARTHTTPPOLLERS: "1"
+      ZBX_STARTVMWARECOLLECTORS: "0"
+      ZBX_STARTPREPROCESSORS: "1"
+    ports:
+      - "10051:10051"
+    volumes:
+      - ./data/alertscripts:/usr/lib/zabbix/alertscripts
+      - ./data/externalscripts:/usr/lib/zabbix/externalscripts
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 65535
+        hard: 65535
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-7.0-latest
+    container_name: zabbix-web
+    restart: unless-stopped
+    depends_on:
+      - db
+      - zabbix-server
+    environment:
+      DB_SERVER_HOST: db
+      DB_SERVER_PORT: 5432
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbix
+      POSTGRES_DB: zabbix
+
+      ZBX_SERVER_HOST: zabbix-server
+      ZBX_SERVER_PORT: 10051
+      PHP_TZ: "Europe/Amsterdam"
+
+    volumes:
+      - ./data/web:/etc/ssl/nginx
+    ports:
+      - "8080:8080"
+
+networks:
+  default:
+    name: zabbix-net
